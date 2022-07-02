@@ -1,17 +1,22 @@
 /** @jsx h */
 import { h } from "preact";
 import { useState } from "preact/hooks";
+import { PageProps } from "$fresh/server.ts";
 import { IS_BROWSER } from "$fresh/runtime.ts";
 import { tw } from "@twind";
 
-interface UpdateButtonProps { }
+interface UpdateButtonProps {
+  currentPage: number;
+}
 
 export default function UpdateButton(props: UpdateButtonProps) {
-  const updateResults = (page) => {
-    console.log(window.location)
+  const updateResults = () => {
+    let currentParams = new URLSearchParams(window.location.search);
+    currentParams.set("page", props.currentPage + 1);
+    window.location.search = currentParams;
   }
 
   return (
-    <button class={tw`flex-shrink-0 border-transparent mx-2 p-2 rounded bg-amber-300`} type="button" disabled={!IS_BROWSER} onClick={updateResults(2)}>Load More</button>
+    <button class={tw`border-transparent mx-2 p-2 rounded bg-amber-300`} type="button" disabled={!IS_BROWSER} onClick={updateResults}> Load More</button >
   );
 }

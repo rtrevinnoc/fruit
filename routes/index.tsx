@@ -18,11 +18,11 @@ interface Data {
 export const handler: Handlers<Data | null> = {
   async GET(req, ctx) {
     const url = new URL(req.url);
-    const search = url.searchParams.get("search") || "";
-    const page = url.searchParams.get("page") || 1;
+    const query = url.searchParams.get("query") || "";
+    const page = parseInt(url.searchParams.get("page")) || 1;
 
-    if (search != "") {
-      const resp = await fetch('https://wearebuildingthefuture.com/_answer?' + new URLSearchParams({ query: search, page: page }))
+    if (query != "") {
+      const resp = await fetch('https://wearebuildingthefuture.com/_answer?' + new URLSearchParams({ query, page }))
         .then(response => response.json())
         .then(data => data.result);
       if (resp.status === 404) {
@@ -33,9 +33,9 @@ export const handler: Handlers<Data | null> = {
       const corrected: string = resp.corrected;
       const summary: string = resp.small_summary;
       const results: Result[] = resp.urls;
-      return ctx.render({ answer, corrected, summary, results });
+      return ctx.render({ answer, corrected, summary, results, page });
     } else {
-      return ctx.render({ answer: null, corrected: null, summary: null, results: [] });
+      return ctx.render({ answer: null, corrected: null, summary: null, results: [], page });
     }
   },
 };
@@ -77,7 +77,7 @@ export default function Home({ data }: PageProps<Data | null>) {
   }
 
   if (results.length > 0) {
-    updateButton = <UpdateButton />
+    updateButton = <UpdateButton currentPage={data.page} />
   }
 
   return (
@@ -105,7 +105,7 @@ export default function Home({ data }: PageProps<Data | null>) {
             return <ResultCard header={result.header} url={result.url} body={result.body} />
           })}
         </div>
-        <div>
+        <div class={tw`w-full text-center`}>
           {updateButton}
         </div>
       </div>

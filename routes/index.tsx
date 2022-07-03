@@ -22,7 +22,7 @@ export const handler: Handlers<Data | null> = {
     const page = parseInt(url.searchParams.get("page")) || 1;
 
     if (query != "") {
-      const resp = await fetch('https://wearebuildingthefuture.com/_answer?' + new URLSearchParams({ query, page }))
+      const resp = await fetch(Deno.env.get("MASTER") + '/_answer?' + new URLSearchParams({ query, page }))
         .then(response => response.json())
         .then(data => data.result);
       if (resp.status === 404) {

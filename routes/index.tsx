@@ -2,20 +2,18 @@
 import { h } from "preact";
 import { tw } from "@twind";
 import { Handlers, PageProps } from "$fresh/server.ts";
-import UpdateButton from "../islands/UpdateButton.tsx";
 import Result from "../interfaces/Result.ts"
 import Answer from "../interfaces/Answer.ts"
 import Data from "../interfaces/Data.ts"
-import { lineClamp } from '@twind/line-clamp'
 
 export const handler: Handlers<Data | null> = {
   async GET(req, ctx) {
     const url = new URL(req.url);
     const query = url.searchParams.get("query") || "";
-    const page = parseInt(url.searchParams.get("page")) || 1;
+    const currentPage = parseInt(url.searchParams.get("page")) || 1;
 
     if (query != "") {
-      const resp = await fetch(Deno.env.get("MASTER") + '/_answer?' + new URLSearchParams({ query, page }))
+      const resp = await fetch(Deno.env.get("MASTER") + '/_answer?' + new URLSearchParams({ query, page: currentPage }))
         .then(response => response.json())
         .then(data => data.result);
       if (resp.status === 404) {
@@ -23,12 +21,13 @@ export const handler: Handlers<Data | null> = {
       }
 
       const answer: string = resp.answer;
-      const corrected: string = resp.corrected;
+      const corrected: string = resp.corrected || query;
       const summary: string = resp.small_summary;
       const results: Result[] = resp.urls;
-      return ctx.render({ query, answer, corrected, summary, results, page });
+      const nextPage: number = currentPage + 1;
+      return ctx.render({ query, answer, corrected, summary, results, nextPage });
     } else {
-      return ctx.render({ query, answer: null, corrected: null, summary: null, results: [], page });
+      return ctx.render({ query, answer: null, corrected: null, summary: null, results: [], nextPage: 1 });
     }
   },
 };
@@ -61,9 +60,19 @@ export function ResultCard(props: Result) {
           <h2 class={tw`text-lg font-medium`}>{props.header}</h2>
           <h6 class={tw`text-xs font-mono font-thin break-all`}>{props.url}</h6>
         </div>
-        <p class={tw`text-sm ${lineClamp(3)}`}>{props.body}</p>
+        <p class={tw`text-sm line-clamp-3`}>{props.body}</p>
       </a>
     </div>
+  );
+}
+
+export function UpdateButton(props: { currentQuery: string; nextPage: number }) {
+  return (
+    <form class={tw`w-full text-center`}>
+        <input class={tw`hidden`} type="input" name="query" required value={ props.currentQuery } />
+        <input class={tw`hidden`} type="number" name="page" required value={ props.nextPage } />
+    	<button class={tw`border-transparent mx-2 p-2 rounded`} type="submit"> Load More</button >
+    </form>
   );
 }
 
@@ -74,14 +83,14 @@ export default function Home({ data }: PageProps<Data | null>) {
     return <h1>Internal error</h1>;
   }
 
-  const { query, answer, corrected, summary, results } = data;
+  const { query, answer, corrected, summary, results, nextPage } = data;
 
   if (summary != null) {
     answerCard = <AnswerCard answer={answer} corrected={corrected} summary={summary} />
   }
 
   if (results.length > 0) {
-    updateButton = <UpdateButton currentPage={data.page} />
+    updateButton = <UpdateButton currentQuery={corrected} nextPage={nextPage} />
   }
 
   return (
@@ -100,7 +109,7 @@ export default function Home({ data }: PageProps<Data | null>) {
             </span>
           </a>
         </h1>
-        <SearchBar text={query}/>
+        <SearchBar text={corrected}/>
         <div>
           {answerCard}
         </div>
@@ -109,7 +118,7 @@ export default function Home({ data }: PageProps<Data | null>) {
             return <ResultCard header={result.header} url={result.url} body={result.body} />
           })}
         </div>
-        <div class={tw`w-full text-center`}>
+        <div>
           {updateButton}
         </div>
       </div>

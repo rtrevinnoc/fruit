@@ -42,7 +42,7 @@ export const handler: Handlers<Data | null> = {
 
 export function AnswerCard(props: Answer) {
   return (
-    <div class={tw`items-center border rounded-xl px-5 py-3 my-5 mx-1`}>
+    <div class={tw`items-center border rounded-xl px-5 py-3 my-5 mx-1 dark:(border-gray-600)`}>
       <h2 class={tw`text-lg font-medium mb-1`}>{props.corrected}</h2>
       <p class={tw`text-sm`}>{props.summary}</p>
     </div>
@@ -51,7 +51,7 @@ export function AnswerCard(props: Answer) {
 
 export function ResultCard(props: Result) {
   return (
-    <div class={tw`items-center border rounded-xl px-5 py-3 my-5 mx-1`}>
+    <div class={tw`items-center border rounded-xl px-5 py-3 my-5 mx-1 dark:(border-gray-600)`}>
       <a href={props.url}>
         <div class={tw`mb-3`}>
           <h2 class={tw`text-lg font-medium`}>{props.header}</h2>
@@ -81,7 +81,7 @@ export default function Home({ data }: PageProps<Data | null>) {
   }
 
   return (
-    <div class={tw`flex my-5 justify-center items-center w-full`} >
+    <div class={tw`flex py-5 justify-center items-center w-full min-h-screen dark:(bg-gray-800 text-gray-300)`} >
       <title>pear</title>
       <div class={tw`max-w-screen-md w-full mx-3`}>
         <h1 class={tw`text-2xl`}>

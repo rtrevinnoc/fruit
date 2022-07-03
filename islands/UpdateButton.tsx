@@ -17,6 +17,6 @@ export default function UpdateButton(props: UpdateButtonProps) {
   }
 
   return (
-    <button class={tw`border-transparent mx-2 p-2 rounded bg-amber-300`} type="button" disabled={!IS_BROWSER} onClick={updateResults}> Load More</button >
+    <button class={tw`border-transparent mx-2 p-2 rounded`} type="button" disabled={!IS_BROWSER} onClick={updateResults}> Load More</button >
   );
 }

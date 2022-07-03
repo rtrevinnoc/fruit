@@ -33,9 +33,9 @@ export const handler: Handlers<Data | null> = {
       const corrected: string = resp.corrected;
       const summary: string = resp.small_summary;
       const results: Result[] = resp.urls;
-      return ctx.render({ answer, corrected, summary, results, page });
+      return ctx.render({ query, answer, corrected, summary, results, page });
     } else {
-      return ctx.render({ answer: null, corrected: null, summary: null, results: [], page });
+      return ctx.render({ query, answer: null, corrected: null, summary: null, results: [], page });
     }
   },
 };
@@ -70,7 +70,7 @@ export default function Home({ data }: PageProps<Data | null>) {
     return <h1>Internal error</h1>;
   }
 
-  const { answer, corrected, summary, results } = data;
+  const { query, answer, corrected, summary, results } = data;
 
   if (summary != null) {
     answerCard = <AnswerCard answer={answer} corrected={corrected} summary={summary} />
@@ -96,7 +96,7 @@ export default function Home({ data }: PageProps<Data | null>) {
             </span>
           </a>
         </h1>
-        <SearchBar />
+        <SearchBar text={query}/>
         <div>
           {answerCard}
         </div>

@@ -2,18 +2,11 @@
 import { h } from "preact";
 import { tw } from "@twind";
 import { Handlers, PageProps } from "$fresh/server.ts";
-import SearchBar from "../islands/SearchBar.tsx";
 import UpdateButton from "../islands/UpdateButton.tsx";
 import Result from "../interfaces/Result.ts"
-import Answer from "../interfaces/Result.ts"
+import Answer from "../interfaces/Answer.ts"
+import Data from "../interfaces/Data.ts"
 import { lineClamp } from '@twind/line-clamp'
-
-interface Data {
-  answer: string;
-  corrected: string;
-  summary: string;
-  results: Result[];
-}
 
 export const handler: Handlers<Data | null> = {
   async GET(req, ctx) {
@@ -39,6 +32,17 @@ export const handler: Handlers<Data | null> = {
     }
   },
 };
+
+export function SearchBar(props: { text: string }) {
+  return (
+    <form class={tw`my-6 w-full`}>
+      <div class={tw`flex items-center border rounded-xl p-2 dark:(border-gray-600)`}>
+        <input autoFocus autoComplete="off" class={tw`appearance-none bg-transparent border-none w-full dark:(text-gray-200) ml-2 p-2 leading-tight focus:outline-none`} type="text" id="query" name="query" placeholder="Surf the web..." required value={ props.text } />
+        <button class={tw`flex-shrink-0 border-transparent mx-2 p-2 rounded`} type="submit">Search</button>
+      </div>
+    </form>
+  );
+}
 
 export function AnswerCard(props: Answer) {
   return (

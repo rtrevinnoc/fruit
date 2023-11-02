@@ -11,40 +11,47 @@ export const handler: Handlers<Data | null> = {
 
     if (query != "") {
 
-      const response = await fetch(`${Deno.env.get("PEAR_MASTER")}/_peers`)
-      const data = await fetch(`${Deno.env.get("PEAR_MASTER")}/_summary?${new URLSearchParams({ query, page: currentPage })}`)
-        .then(response => response.json())
-      if (response.status === 404) {
+      const response = await fetch(Deno.env.get("PEAR_LIST"))
+      if (!response.ok) {
         return ctx.render(null);
       }
-      const peer_promises = await response.json()
+      const peers = await response.json()
         .then(json => json.peers)
-        .then(peers => peers.map(peer => fetch(`${peer.address}/_results?${new URLSearchParams({ query, page: currentPage })}`)))
-        .then(promises => promises.map((promise) => {
-          const timeout = new Promise((resolve) => {
-            setTimeout(() => {
-              resolve(null);
-            }, parseInt(Deno.env.get("PEAR_TIMEOUT")));
-          });
 
-          const timeout_promise = Promise.race([promise, timeout]).catch(
-            _ => {
-              return;
-            }
-          );
+      const result_promises = peers.map(peer => fetch(`${peer.address}/_results?${new URLSearchParams({ query, page: currentPage })}`).catch(_ => null));
+      result_promises.map((promise) => {
+        const timeout = new Promise((resolve) => {
+          setTimeout(() => {
+            resolve(null);
+          }, parseInt(Deno.env.get("PEAR_TIMEOUT")));
+        });
 
-          return timeout_promise;
-        }));
+        const timeout_promise = Promise.race([promise, timeout]).catch(
+          _ => {
+            return;
+          }
+        );
 
-      const json_promises = await Promise.all(peer_promises)
-        .then(responses => responses.filter(response => (response !== null && response.status === 200)))
+        return timeout_promise;
+      });
+
+      const json_result_promises = await Promise.all(result_promises)
+        .then(responses => responses.filter(response => (response !== null && response.ok)))
         .then(responses => responses.map(response => response.json()))
-      const results: Result[] = await Promise.all(json_promises).then(responses => responses.map(response => response.urls).flat().sort((a, b) => b.score - a.score).slice(0, 5))
+      const results: Result[] = await Promise.all(json_result_promises).then(responses => responses.map(response => response.urls).flat().sort((a, b) => b.score - a.score).slice(0, 5))
 
-      // const data = await resp.json();
-      const answer: string = data.small_summary;
-      const corrected: string = data.corrected || query;
-      const summary: string = data.small_summary;
+      const data = await Promise.any(peers.map(peer => fetch(`${peer.address}/_summary?${new URLSearchParams({ query })}`).then((response) =>
+        response.json().then((data) => {
+          if (!response.ok) {
+            throw Error(data.err || 'HTTP error');
+          }
+          return data;
+        }),
+      )));
+
+      const answer: string = data.small_summary ?? "";
+      const corrected: string = data.corrected ?? query;
+      const summary: string = data.small_summary ?? "";
       const nextPage: number = currentPage + 1;
       return ctx.render({ query, answer, corrected, summary, results, nextPage });
     } else {
